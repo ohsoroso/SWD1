@@ -79,10 +79,15 @@ public class tA {
     }
 
     private static void displayWordCount(Map<String, Integer> wordCountMap) {
+        System.out.println("Top 20 Words Used:");
         System.out.println("Word\t\tCount");
         System.out.println("---------------------");
-        for (Map.Entry<String, Integer> entry : wordCountMap.entrySet()) {
-            System.out.println(entry.getKey() + "\t\t" + entry.getValue());
-        }
+    
+        wordCountMap.entrySet()
+                .stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(20)
+                .forEach(entry -> System.out.println(entry.getKey() + "\t\t" + entry.getValue()));
     }
+    
 }
