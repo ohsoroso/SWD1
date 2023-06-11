@@ -56,14 +56,5 @@ public class fibbo {
 
             System.out.printf("%d\t%d ns\t\t%d ns\n", i, recursiveTime, iterativeTime);
         }
-
-        System.out.println("\nFibonacci Chart:");
-        System.out.println("-----------------");
-        System.out.println("Index\tRecursive\tIterative");
-        System.out.println("-----------------");
-
-        for (int i = 0; i <= maxIndex; i++) {
-            System.out.printf("%d\t%d ns\t\t%d ns\n", i, recursiveResults.get(i), iterativeResults.get(i));
-        }
     }
 }
