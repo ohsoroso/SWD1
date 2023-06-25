@@ -1,6 +1,7 @@
 {
   "java.project.referencedLibraries": [
     "lib/**/*.jar",
-    "textAnalyzer/lib/jsoup-1.16.1.jar"
+    "textAnalyzer/lib/jsoup-1.16.1.jar",
+    "textAnalyzer/lib/javafx-sdk-20.0.1/*"
   ]
 }
