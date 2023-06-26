@@ -61,7 +61,7 @@ public class MainApp extends Application {
         }
     }
 
-    private String readHTMLFile(String filePath, String startElementId, String endElementId) throws IOException {
+    static String readHTMLFile(String filePath, String startElementId, String endElementId) throws IOException {
         Document document = Jsoup.parse(new File(filePath), "UTF-8");
         Element startElement = document.getElementById(startElementId);
         Element endElement = document.getElementById(endElementId);
@@ -90,13 +90,13 @@ public class MainApp extends Application {
         return sb.toString().trim();
     }
 
-    private void analyzeText() {
+    void analyzeText() {
         String htmlContent = textArea.getText();
         Map<String, Integer> wordCountMap = analyzeHTML(htmlContent);
         displayTop20Words(wordCountMap);
     }
 
-    private Map<String, Integer> analyzeHTML(String htmlContent) {
+    Map<String, Integer> analyzeHTML(String htmlContent) {
         Map<String, Integer> wordCountMap = new HashMap<>();
 
         // Remove special characters and punctuation (except apostrophes)
@@ -137,4 +137,3 @@ public class MainApp extends Application {
         topWordsStage.show();
     }
 }
-
