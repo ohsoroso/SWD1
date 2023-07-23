@@ -15,6 +15,9 @@ import org.jsoup.nodes.Element;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,7 +64,7 @@ public class MainApp extends Application {
         }
     }
 
-    static String readHTMLFile(String filePath, String startElementId, String endElementId) throws IOException {
+    private String readHTMLFile(String filePath, String startElementId, String endElementId) throws IOException {
         Document document = Jsoup.parse(new File(filePath), "UTF-8");
         Element startElement = document.getElementById(startElementId);
         Element endElement = document.getElementById(endElementId);
@@ -90,22 +93,18 @@ public class MainApp extends Application {
         return sb.toString().trim();
     }
 
-    void analyzeText() {
+    private void analyzeText() {
         String htmlContent = textArea.getText();
         Map<String, Integer> wordCountMap = analyzeHTML(htmlContent);
         displayTop20Words(wordCountMap);
     }
 
-    Map<String, Integer> analyzeHTML(String htmlContent) {
+    private Map<String, Integer> analyzeHTML(String htmlContent) {
         Map<String, Integer> wordCountMap = new HashMap<>();
 
-        // Remove special characters and punctuation (except apostrophes)
         String plainText = htmlContent.replaceAll("[^\\p{L}\\p{Nd}']+", " ");
-
-        // Split the content into words
         String[] words = plainText.split("\\s+");
 
-        // Count the occurrences of each word
         for (String word : words) {
             word = word.toLowerCase();
             wordCountMap.put(word, wordCountMap.getOrDefault(word, 0) + 1);
@@ -115,25 +114,39 @@ public class MainApp extends Application {
     }
 
     private void displayTop20Words(Map<String, Integer> wordCountMap) {
-        // Create a new window to display the top 20 words
-        Stage topWordsStage = new Stage();
-        topWordsStage.setTitle("Top 20 Words");
-        VBox topWordsVBox = new VBox(10);
-        topWordsVBox.setPadding(new Insets(10));
+        try (Socket clientSocket = new Socket("localhost", 12345);
+             ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+             ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream())) {
 
-        // Sort the words by their counts in descending order
-        wordCountMap.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(20)
-                .forEach(entry -> {
-                    String word = entry.getKey();
-                    int count = entry.getValue();
-                    Label label = new Label(word + ": " + count);
-                    topWordsVBox.getChildren().add(label);
-                });
+            // Send the HTML content to the server
+            outputStream.writeObject(textArea.getText());
 
-        Scene topWordsScene = new Scene(topWordsVBox, 400, 300);
-        topWordsStage.setScene(topWordsScene);
-        topWordsStage.show();
+            // Receive the word count map from the server
+            @SuppressWarnings("unchecked")
+			Map<String, Integer> serverWordCountMap = (Map<String, Integer>) inputStream.readObject();
+
+            // Display the top 20 words from the server's word count map
+            Stage topWordsStage = new Stage();
+            topWordsStage.setTitle("Top 20 Words");
+            VBox topWordsVBox = new VBox(10);
+            topWordsVBox.setPadding(new Insets(10));
+
+            int count = 0;
+            for (Map.Entry<String, Integer> entry : serverWordCountMap.entrySet()) {
+                if (count >= 20) break;
+                String word = entry.getKey();
+                int frequency = entry.getValue();
+                Label label = new Label(word + ": " + frequency);
+                topWordsVBox.getChildren().add(label);
+                count++;
+            }
+
+            Scene topWordsScene = new Scene(topWordsVBox, 400, 300);
+            topWordsStage.setScene(topWordsScene);
+            topWordsStage.show();
+
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error communicating with the server: " + e.getMessage());
+        }
     }
 }
